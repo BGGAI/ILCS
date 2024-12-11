@@ -5,6 +5,7 @@ import KeywordInput from "@/components/topics/KeywordInput";
 import TopicMap from "@/components/topics/TopicMap";
 import InsightInput from "@/components/articles/InsightInput";
 import ArticleDisplay from "@/components/articles/ArticleDisplay";
+import { mockTopicData, mockArticles } from "@/mocks/topicData";
 
 interface Article {
   id: string;
@@ -21,12 +22,21 @@ export default function Home() {
   const [topicData, setTopicData] = React.useState<{
     topics: any[];
     relationships: any[];
-  }>({ topics: [], relationships: [] });
-  const [articles, setArticles] = React.useState<Article[]>([]);
+  }>(mockTopicData);
+  const [articles, setArticles] = React.useState<Article[]>(mockArticles);
 
   const handleAnalyze = async (keywords: string[]) => {
     setIsLoading(true);
     try {
+      if (!process.env.NEXT_PUBLIC_API_URL) {
+        // Use mock data in development mode
+        setTimeout(() => {
+          setTopicData(mockTopicData);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/topics`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -36,6 +46,8 @@ export default function Home() {
       setTopicData(data);
     } catch (error) {
       console.error("Error analyzing keywords:", error);
+      // Fallback to mock data on error
+      setTopicData(mockTopicData);
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +56,15 @@ export default function Home() {
   const handleInsightSubmit = async (insights: string) => {
     setIsLoading(true);
     try {
+      if (!process.env.NEXT_PUBLIC_API_URL) {
+        // Use mock data in development mode
+        setTimeout(() => {
+          setArticles(mockArticles);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,6 +77,8 @@ export default function Home() {
       setArticles(data.articles);
     } catch (error) {
       console.error("Error generating articles:", error);
+      // Fallback to mock data on error
+      setArticles(mockArticles);
     } finally {
       setIsLoading(false);
     }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface KeywordInputProps {
   onAnalyze: (keywords: string[]) => void;
@@ -12,10 +12,10 @@ interface KeywordInputProps {
 }
 
 export default function KeywordInput({ onAnalyze, isLoading = false }: KeywordInputProps) {
-  const [keywords, setKeywords] = useState<string>("");
+  const [keywords, setKeywords] = useState("");
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const keywordList = keywords
       .split(",")
@@ -31,23 +31,53 @@ export default function KeywordInput({ onAnalyze, isLoading = false }: KeywordIn
       return;
     }
 
-    onAnalyze(keywordList);
+    try {
+      // For testing UI without backend
+      if (!process.env.NEXT_PUBLIC_API_URL) {
+        toast({
+          title: "Development Mode",
+          description: "Using mock data for testing",
+        });
+        onAnalyze(keywordList);
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/topics`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ keywords: keywordList }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to analyze keywords");
+      }
+
+      const result = await response.json();
+      onAnalyze(result.topics);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to analyze keywords. Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <Card className="w-full max-w-2xl">
+    <Card>
       <CardHeader>
         <CardTitle>Enter Industry Keywords</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            placeholder="Enter keywords separated by commas (e.g., artificial intelligence, machine learning)"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
-            disabled={isLoading}
+            placeholder="Enter keywords separated by commas (e.g., artificial intelligence, machine learning)"
           />
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button type="submit" disabled={isLoading}>
             {isLoading ? "Analyzing..." : "Generate Topic Map"}
           </Button>
         </form>
