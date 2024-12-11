@@ -1,65 +1,45 @@
-import { useState } from 'react'
-import KeywordInput from './components/topics/KeywordInput'
-import TopicMap from './components/topics/TopicMap'
-import InsightInput from './components/articles/InsightInput'
-import ArticleDisplay from './components/articles/ArticleDisplay'
+"use client";
 
-// Mock data for testing UI components
-const mockTopicData = {
-  topics: [
-    {
-      name: "AI Applications",
-      keywords: ["artificial intelligence", "machine learning"],
-      relevanceScore: 0.9,
-      searchVolume: 80,
-      difficulty: 0.7
-    },
-    {
-      name: "Deep Learning",
-      keywords: ["neural networks", "deep learning"],
-      relevanceScore: 0.8,
-      searchVolume: 60,
-      difficulty: 0.8
-    }
-  ],
-  relationships: [
-    { source: "AI Applications", target: "Deep Learning" }
-  ]
+import { useState } from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import KeywordInput from '@/components/topics/KeywordInput';
+import TopicMap from '@/components/topics/TopicMap';
+import InsightInput from '@/components/articles/InsightInput';
+import ArticleDisplay from '@/components/articles/ArticleDisplay';
+import { Topic, Article, generateArticles } from '@/lib/api';
+
+interface TopicData {
+  topics: Topic[];
+  relationships: Array<{
+    source: string;
+    target: string;
+    strength: number;
+  }>;
 }
 
-const mockArticles = [
-  {
-    id: "1",
-    title: "The Future of AI Applications in Business",
-    content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit...",
-    images: [{ url: "https://via.placeholder.com/400x300", alt: "AI Business Applications" }]
-  }
-]
-
 function App() {
-  const [topicData, setTopicData] = useState(mockTopicData)
-  const [articles, setArticles] = useState(mockArticles)
-  const [isLoading, setIsLoading] = useState(false)
+  const [topicData, setTopicData] = useState<TopicData | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAnalyze = async (keywords: string[]) => {
-    setIsLoading(true)
-    console.log('Analyzing keywords:', keywords)
-    // Mock API call
-    setTimeout(() => {
-      setTopicData(mockTopicData)
-      setIsLoading(false)
-    }, 1000)
-  }
+  const handleTopicsGenerated = (result: TopicData) => {
+    setIsLoading(false);
+    setTopicData(result);
+  };
 
   const handleInsightSubmit = async (insights: string) => {
-    setIsLoading(true)
-    console.log('Processing insights:', insights)
-    // Mock API call
-    setTimeout(() => {
-      setArticles(mockArticles)
-      setIsLoading(false)
-    }, 1000)
-  }
+    if (!topicData) return;
+
+    setIsLoading(true);
+    try {
+      const result = await generateArticles(topicData.topics, insights);
+      setArticles(result.articles);
+    } catch (error) {
+      console.error('Error generating articles:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -68,20 +48,30 @@ function App() {
       <div className="space-y-8">
         <section>
           <h2 className="text-2xl font-semibold mb-4">1. Enter Keywords</h2>
-          <KeywordInput onAnalyze={handleAnalyze} isLoading={isLoading} />
+          <KeywordInput
+            onTopicsGenerated={handleTopicsGenerated}
+            isLoading={isLoading}
+          />
         </section>
 
         {topicData && (
           <section>
             <h2 className="text-2xl font-semibold mb-4">2. Topic Map</h2>
-            <TopicMap topics={topicData.topics} relationships={topicData.relationships} />
+            <TopicMap
+              topics={topicData.topics}
+              relationships={topicData.relationships}
+            />
           </section>
         )}
 
         {topicData && (
           <section>
             <h2 className="text-2xl font-semibold mb-4">3. Add Insights</h2>
-            <InsightInput onSubmit={handleInsightSubmit} isLoading={isLoading} />
+            <InsightInput
+              topics={topicData.topics}
+              onSubmit={handleInsightSubmit}
+              isLoading={isLoading}
+            />
           </section>
         )}
 
@@ -92,8 +82,10 @@ function App() {
           </section>
         )}
       </div>
+
+      <Toaster />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

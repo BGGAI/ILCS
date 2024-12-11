@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { generateTopicMap } from "@/lib/api";
+import { LoadingSpinner } from "@/components/ui/loading";
 
 interface KeywordInputProps {
-  onAnalyze: (keywords: string[]) => void;
+  onTopicsGenerated: (topics: any) => void;
   isLoading?: boolean;
 }
 
-export default function KeywordInput({ onAnalyze, isLoading = false }: KeywordInputProps) {
+export default function KeywordInput({ onTopicsGenerated, isLoading = false }: KeywordInputProps) {
   const [keywords, setKeywords] = useState("");
   const { toast } = useToast();
 
@@ -32,34 +34,16 @@ export default function KeywordInput({ onAnalyze, isLoading = false }: KeywordIn
     }
 
     try {
-      // For testing UI without backend
-      if (!process.env.NEXT_PUBLIC_API_URL) {
-        toast({
-          title: "Development Mode",
-          description: "Using mock data for testing",
-        });
-        onAnalyze(keywordList);
-        return;
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/topics`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ keywords: keywordList }),
+      const result = await generateTopicMap(keywordList);
+      onTopicsGenerated(result);
+      toast({
+        title: "Topics generated successfully",
+        variant: "default",
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to analyze keywords");
-      }
-
-      const result = await response.json();
-      onAnalyze(result.topics);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to analyze keywords. Please try again later.",
+        title: "Error generating topics",
+        description: "Please try again later",
         variant: "destructive",
       });
     }
@@ -76,9 +60,17 @@ export default function KeywordInput({ onAnalyze, isLoading = false }: KeywordIn
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
             placeholder="Enter keywords separated by commas (e.g., artificial intelligence, machine learning)"
+            disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Analyzing..." : "Generate Topic Map"}
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? (
+              <div className="flex items-center space-x-2">
+                <LoadingSpinner />
+                <span>Analyzing...</span>
+              </div>
+            ) : (
+              "Generate Topic Map"
+            )}
           </Button>
         </form>
       </CardContent>
