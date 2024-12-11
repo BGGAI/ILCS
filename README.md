@@ -6,6 +6,13 @@ This repository contains the implementation of the Imitation Learning Customer S
 
 ILCS is designed to provide customer service capabilities through imitation learning techniques.
 
+## Project Structure
+
+```
+ILCS/
+└── README.md  - Project documentation and setup instructions
+```
+
 ## Setup
 
 *Setup instructions will be added as the project develops.*
