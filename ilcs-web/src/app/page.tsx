@@ -27,7 +27,7 @@ export default function Home() {
   const handleAnalyze = async (keywords: string[]) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/topics", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/topics`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keywords }),
@@ -44,7 +44,7 @@ export default function Home() {
   const handleInsightSubmit = async (insights: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/articles", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/articles`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
