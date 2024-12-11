@@ -1,0 +1,50 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Topic {
+  id             String    @id @default(cuid())
+  name           String
+  keywords       String[]
+  parentTopicId  String?
+  parentTopic    Topic?    @relation("TopicHierarchy", fields: [parentTopicId], references: [id])
+  childTopics    Topic[]   @relation("TopicHierarchy")
+  relevanceScore Float
+  searchVolume   Int
+  difficulty     Float
+  articles       Article[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  topicId     String
+  topic       Topic    @relation(fields: [topicId], references: [id])
+  images      Image[]
+  seoMetadata Json
+  insights    String[]
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
