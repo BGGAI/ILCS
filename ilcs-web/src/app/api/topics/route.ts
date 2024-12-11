@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
-import { Configuration, OpenAIApi } from "openai";
-import natural from "natural";
+import OpenAI from "openai";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const tokenizer = new natural.WordTokenizer();
-const tfidf = new natural.TfIdf();
 
-// Initialize OpenAI configuration
-const configuration = new Configuration({
+// Initialize OpenAI client
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 export async function POST(request: Request) {
   try {
@@ -47,14 +43,14 @@ export async function POST(request: Request) {
       ]
     }`;
 
-    const completion = await openai.createCompletion({
+    const completion = await openai.completions.create({
       model: "gpt-3.5-turbo-instruct",
       prompt,
       max_tokens: 1000,
       temperature: 0.7,
     });
 
-    const topicMap = JSON.parse(completion.data.choices[0].text);
+    const topicMap = JSON.parse(completion.choices[0].text);
 
     // Store topics in database
     for (const topic of topicMap.topics) {
