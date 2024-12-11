@@ -22,7 +22,7 @@ app.add_middleware(
 async def healthz():
     return {"status": "ok"}
 
-@app.post("/api/topics", response_model=TopicResponse)
+@app.post("/topics", response_model=TopicResponse)
 async def analyze_keywords(request: KeywordRequest):
     try:
         topics, relationships = await generate_topic_map(request.keywords)
@@ -30,7 +30,7 @@ async def analyze_keywords(request: KeywordRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/articles", response_model=ArticleResponse)
+@app.post("/articles", response_model=ArticleResponse)
 async def generate_articles(request: ArticleRequest):
     try:
         articles = []
