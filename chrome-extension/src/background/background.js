@@ -3,8 +3,8 @@ let DIFY_API_KEY = '';
 
 // URL patterns to match
 const URL_PATTERNS = [
-  "*://*.pinduoduo.com/*chat-merchant*",
-  "*://*.yangkeduo.com/*chat-merchant*"
+  "*://*.pinduoduo.com/*",
+  "*://*.yangkeduo.com/*"
 ];
 
 // Initialize Dify API key from storage
@@ -14,19 +14,32 @@ chrome.storage.local.get(['difyApiKey'], (result) => {
   }
 });
 
-// Handle dynamic script injection
+// Inject content script function
+async function injectContentScript(tabId) {
+  try {
+    console.log('[ILCS Background] Attempting to inject content script into tab:', tabId);
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId, allFrames: true },
+      files: ['src/content/content.js']
+    });
+    console.log('[ILCS Background] Content script injection successful for tab:', tabId);
+  } catch (err) {
+    console.error('[ILCS Background] Script injection error:', err);
+  }
+}
+
+// Handle tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
+  console.log('[ILCS Background] Tab updated:', tabId, changeInfo.status, tab.url);
+
+  if (changeInfo.status === 'loading' || changeInfo.status === 'complete') {
     const matches = URL_PATTERNS.some(pattern =>
       new RegExp('^' + pattern.replace(/\*/g, '.*') + '$').test(tab.url)
     );
 
     if (matches) {
-      console.log('[ILCS] Injecting content script into:', tab.url);
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['src/content/content.js']
-      }).catch(err => console.error('[ILCS] Script injection error:', err));
+      console.log('[ILCS Background] URL matches pattern, injecting content script');
+      injectContentScript(tabId);
     }
   }
 });
@@ -77,6 +90,8 @@ async function updateDifyKnowledge(originalResponse, improvedResponse, question)
 
 // Message handling
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('[ILCS Background] Received message:', message.type);
+
   if (message.type === 'getDifyResponse') {
     callDifyAPI(message.question)
       .then(response => {

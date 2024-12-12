@@ -15,10 +15,11 @@ const CONFIG = {
 function debug(...args) {
     if (CONFIG.DEBUG) {
         const timestamp = new Date().toISOString();
-        const location = window.location.href;
-        console.log(`[ILCS Debug ${timestamp}] [URL: ${location}]`, ...args);
-        console.log('[ILCS] Document readyState:', document.readyState);
-        console.log('[ILCS] Chat container elements:', document.querySelectorAll('.chat-message').length);
+        console.log('[ILCS Content] Script loaded and executing');
+        console.log(`[ILCS Content ${timestamp}]`, ...args);
+        console.log('[ILCS Content] Document readyState:', document.readyState);
+        console.log('[ILCS Content] URL:', window.location.href);
+        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item').length);
     }
 }
 
