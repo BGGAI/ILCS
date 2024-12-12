@@ -5,7 +5,7 @@ import os
 from ..config import get_settings
 
 settings = get_settings()
-USE_MOCK = not settings.openai_api_key or os.getenv('USE_MOCK', '').lower() == 'true'
+USE_MOCK = settings.use_mock or not settings.openai_api_key
 
 # Mock data for development and testing
 MOCK_TOPIC_MAP = {

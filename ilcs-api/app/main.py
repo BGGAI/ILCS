@@ -3,19 +3,25 @@ from fastapi.middleware.cors import CORSMiddleware
 import psycopg
 from typing import List
 import uuid
+import os
 
 from .models import KeywordRequest, TopicResponse, ArticleRequest, ArticleResponse, Article
 from .services.openai_service import generate_topic_map, generate_article
 
 app = FastAPI()
 
-# Disable CORS. Do not remove this for full-stack development.
+# Configure CORS - must be added before any routes
+origins = [
+    "https://ai-content-creation-app-2411p38i.devinapps.com",  # Production frontend
+    "http://localhost:5173",  # Development frontend
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/healthz")
