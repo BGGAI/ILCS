@@ -1,19 +1,24 @@
-// Monitor customer messages in PDD customer service system
-console.log('[ILCS] Content script loaded and running');
-
-// Configuration
+// Debug logging configuration
 const CONFIG = {
-    POLLING_INTERVAL: 500,
-    MAX_RETRIES: 60, // 30 seconds total
-    DEBUG: true
+    DEBUG: true,
+    POLL_INTERVAL: 500,
+    MAX_RETRIES: 60,
+    MUTATION_CONFIG: {
+        childList: true,
+        subtree: true,
+        characterData: true
+    }
 };
 
-// Debug logging
+// Debug logging function
 function debug(...args) {
     if (CONFIG.DEBUG) {
-        console.log('[ILCS]', ...args);
+        console.log('[ILCS Debug]', ...args);
     }
 }
+
+// Immediately log that content script is loaded
+debug('Content script loaded and executing');
 
 // Wait for chat interface to load
 function waitForChatInterface() {
@@ -42,7 +47,7 @@ function waitForChatInterface() {
 
         retryCount++;
         if (retryCount < CONFIG.MAX_RETRIES) {
-            setTimeout(pollForInterface, CONFIG.POLLING_INTERVAL);
+            setTimeout(pollForInterface, CONFIG.POLL_INTERVAL);
         } else {
             debug('Failed to find chat interface after max retries');
         }
@@ -114,14 +119,10 @@ function initializeMessageMonitoring() {
     const chatContainer = findChatContainer();
     if (chatContainer) {
         debug('Found chat container, starting observation');
-        observer.observe(chatContainer, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
+        observer.observe(chatContainer, CONFIG.MUTATION_CONFIG);
     } else {
         debug('Chat container not found, retrying...');
-        setTimeout(initializeMessageMonitoring, CONFIG.POLLING_INTERVAL);
+        setTimeout(initializeMessageMonitoring, CONFIG.POLL_INTERVAL);
     }
 }
 

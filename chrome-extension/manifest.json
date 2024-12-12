@@ -23,8 +23,9 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.pinduoduo.com/*",
-        "*://*.yangkeduo.com/*"
+        "*://*.pinduoduo.com/chat-merchant/*",
+        "*://*.pinduoduo.com/chat-merchant/index.html*",
+        "*://*.yangkeduo.com/chat-merchant/*"
       ],
       "js": ["src/content/content.js"],
       "run_at": "document_idle"
