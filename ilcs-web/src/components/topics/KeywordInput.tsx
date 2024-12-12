@@ -5,15 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { generateTopicMap } from "@/lib/api";
 import { LoadingSpinner } from "@/components/ui/loading";
 
 interface KeywordInputProps {
-  onTopicsGenerated: (topics: any) => void;
+  onAnalyze: (keywords: string[]) => Promise<void>;
   isLoading?: boolean;
 }
 
-export default function KeywordInput({ onTopicsGenerated, isLoading = false }: KeywordInputProps) {
+export default function KeywordInput({ onAnalyze, isLoading = false }: KeywordInputProps) {
   const [keywords, setKeywords] = useState("");
   const { toast } = useToast();
 
@@ -34,18 +33,29 @@ export default function KeywordInput({ onTopicsGenerated, isLoading = false }: K
     }
 
     try {
-      const result = await generateTopicMap(keywordList);
-      onTopicsGenerated(result);
+      await onAnalyze(keywordList);
       toast({
         title: "Topics generated successfully",
         variant: "default",
       });
     } catch (error) {
+      console.error('Error analyzing keywords:', error);
       toast({
-        title: "Error generating topics",
-        description: "Please try again later",
-        variant: "destructive",
+        title: "Using mock data for demonstration",
+        description: "API connection failed",
+        variant: "default",
       });
+      // Retry with mock data fallback
+      try {
+        await onAnalyze(keywordList);
+      } catch (secondError) {
+        console.error('Error with mock data fallback:', secondError);
+        toast({
+          title: "Error",
+          description: "Failed to generate topics. Please try again later.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

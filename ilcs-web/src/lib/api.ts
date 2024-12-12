@@ -34,7 +34,7 @@ export interface ArticleResponse {
 }
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000'  // FastAPI backend URL
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000'  // FastAPI backend URL with Vite env var
 });
 
 export const generateTopicMap = async (keywords: string[]): Promise<TopicResponse> => {
