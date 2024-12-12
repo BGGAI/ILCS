@@ -1,5 +1,6 @@
 // State management
 let currentResponse = null;
+let currentQuestion = null;
 
 // DOM Elements
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,11 +17,21 @@ document.addEventListener('DOMContentLoaded', () => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'newQuestion') {
       displayQuestion(message.question);
+      currentQuestion = message.question;
       getDifyResponse(message.question);
     } else if (message.type === 'difyResponse') {
       displayDifyResponse(message.response);
       currentResponse = message.response;
       responseEditor.value = message.response;
+    } else if (message.type === 'difyError') {
+      displayError(message.error);
+    }
+  });
+
+  // Check for Dify API key
+  chrome.storage.local.get(['difyApiKey'], (result) => {
+    if (!result.difyApiKey) {
+      displayError('Please set Dify API key in extension options');
     }
   });
 });
@@ -32,6 +43,10 @@ function displayQuestion(question) {
 
 function displayDifyResponse(response) {
   appendMessage('Dify', response);
+}
+
+function displayError(error) {
+  appendMessage('Error', error);
 }
 
 function appendMessage(sender, content) {
@@ -59,9 +74,12 @@ async function sendResponse(isEdited) {
     type: 'sendResponse',
     content: responseEditor.value,
     isEdited: isEdited,
-    originalContent: currentResponse
+    originalContent: currentResponse,
+    question: currentQuestion
   };
 
-  // Send to background script to handle response
-  chrome.runtime.sendMessage(response);
+  // Send to content script to handle response
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, response);
+  });
 }
