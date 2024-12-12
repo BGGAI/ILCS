@@ -1,11 +1,10 @@
-// Configuration
 const DIFY_API_ENDPOINT = 'https://api.dify.ai/v1';
 let DIFY_API_KEY = '';
 
 // URL patterns to match
 const URL_PATTERNS = [
-  "*://*.pinduoduo.com/chat-merchant/*",
-  "*://*.yangkeduo.com/chat-merchant/*"
+  "*://*.pinduoduo.com/*chat-merchant*",
+  "*://*.yangkeduo.com/*chat-merchant*"
 ];
 
 // Initialize Dify API key from storage
