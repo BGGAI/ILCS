@@ -15,13 +15,14 @@ const CONFIG = {
 console.log('[ILCS Content] Script initialization started');
 console.log('[ILCS Content] Document readyState:', document.readyState);
 console.log('[ILCS Content] URL:', window.location.href);
+console.log('[ILCS Content] Is iframe:', window.self !== window.top);
 
 // Debug logging function with timestamp and URL
 function debug(...args) {
     if (CONFIG.DEBUG) {
         const timestamp = new Date().toISOString();
         console.log(`[ILCS Content ${timestamp}]`, ...args);
-        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item, .message-content, .chat-container').length);
+        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item, .message-content, .chat-container, [class*="chat"], [class*="message"]').length);
     }
 }
 
@@ -29,15 +30,13 @@ function debug(...args) {
 function initializeScript() {
     debug('Attempting script initialization');
 
-    // Check if we're on a relevant page
-    if (!window.location.href.includes('pinduoduo.com') && !window.location.href.includes('yangkeduo.com')) {
-        debug('Not on a relevant page, skipping initialization');
-        return;
-    }
+    // Check if we're in the correct context
+    const isMainFrame = window.self === window.top;
+    debug(`Initializing in ${isMainFrame ? 'main frame' : 'iframe'}`);
 
     // Create and configure MutationObserver for chat interface
     const observer = new MutationObserver((mutations) => {
-        const chatElements = document.querySelectorAll('.chat-message, .message-item, .message-content, .chat-container');
+        const chatElements = document.querySelectorAll('.chat-message, .message-item, .message-content, .chat-container, [class*="chat"], [class*="message"]');
         if (chatElements.length > 0) {
             debug(`Found ${chatElements.length} chat elements`);
             observer.disconnect();
