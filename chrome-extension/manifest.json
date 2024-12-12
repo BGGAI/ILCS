@@ -28,12 +28,12 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.pinduoduo.com/chat-merchant/*",
-        "*://*.pinduoduo.com/chat-merchant/index.html*",
-        "*://*.yangkeduo.com/chat-merchant/*"
+        "*://*.pinduoduo.com/*",
+        "*://*.yangkeduo.com/*"
       ],
       "js": ["src/content/content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_end",
+      "all_frames": true
     }
   ],
   "background": {

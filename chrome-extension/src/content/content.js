@@ -10,11 +10,11 @@ const CONFIG = {
     }
 };
 
-// Debug logging function with timestamp
+// Debug logging function with timestamp and URL
 function debug(...args) {
     if (CONFIG.DEBUG) {
         const timestamp = new Date().toISOString();
-        console.log(`[ILCS Debug ${timestamp}]`, ...args);
+        console.log(`[ILCS Debug ${timestamp}] [${window.location.href}]`, ...args);
     }
 }
 
