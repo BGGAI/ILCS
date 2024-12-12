@@ -30,18 +30,6 @@
     "page": "src/options/options.html",
     "open_in_tab": true
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "*://*.pinduoduo.com/*",
-        "*://*.yangkeduo.com/*"
-      ],
-      "js": ["src/content/content.js"],
-      "run_at": "document_start",
-      "all_frames": true,
-      "match_about_blank": true
-    }
-  ],
   "background": {
     "service_worker": "src/background/background.js"
   }
