@@ -32,6 +32,7 @@ class TestNewsCache(unittest.TestCase):
 class TestFinanceNewsAPI(unittest.TestCase):
     """Test the FinanceNewsAPI class."""
 
+    @patch.dict(os.environ, {'NEWS_API_KEY': 'test_key'})
     def setUp(self):
         self.api = FinanceNewsAPI(cache_duration=3600)
         self.mock_response = {
@@ -46,6 +47,7 @@ class TestFinanceNewsAPI(unittest.TestCase):
             }]
         }
 
+    @patch.dict(os.environ, {'NEWS_API_KEY': 'test_key'})
     @patch('newsapi.NewsApiClient.get_everything')
     def test_fetch_news_success(self, mock_get_everything):
         """Test successful news fetching."""
@@ -56,6 +58,7 @@ class TestFinanceNewsAPI(unittest.TestCase):
         self.assertEqual(news[0]['title'], 'Test Article')
         self.assertEqual(news[0]['source'], 'Test Source')
 
+    @patch.dict(os.environ, {'NEWS_API_KEY': 'test_key'})
     @patch('newsapi.NewsApiClient.get_everything')
     def test_fetch_news_api_error(self, mock_get_everything):
         """Test handling of API errors."""
@@ -63,11 +66,11 @@ class TestFinanceNewsAPI(unittest.TestCase):
         news = self.api.fetch_news('AAPL')
         self.assertEqual(news, [])
 
+    @patch.dict(os.environ, {'NEWS_API_KEY': ''})
     def test_fetch_news_invalid_api_key(self):
         """Test handling of invalid API key."""
-        with patch.dict(os.environ, {'NEWS_API_KEY': ''}):
-            with self.assertRaises(ValueError):
-                FinanceNewsAPI()
+        with self.assertRaises(ValueError):
+            FinanceNewsAPI()
 
 if __name__ == '__main__':
     unittest.main()
