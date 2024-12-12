@@ -11,21 +11,31 @@ const CONFIG = {
     }
 };
 
+// Immediately log script initialization
+console.log('[ILCS Content] Script initialization started');
+console.log('[ILCS Content] Document readyState:', document.readyState);
+console.log('[ILCS Content] URL:', window.location.href);
+
 // Debug logging function with timestamp and URL
 function debug(...args) {
     if (CONFIG.DEBUG) {
         const timestamp = new Date().toISOString();
-        console.log('[ILCS Content] Script loaded and executing');
         console.log(`[ILCS Content ${timestamp}]`, ...args);
-        console.log('[ILCS Content] Document readyState:', document.readyState);
-        console.log('[ILCS Content] URL:', window.location.href);
-        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item').length);
+        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item, .message-content').length);
     }
 }
 
-// Immediately log that content script is loaded
-console.log('[ILCS] Content script loaded at:', window.location.href);
-debug('Content script initialized');
+// Initialize script
+document.addEventListener('DOMContentLoaded', () => {
+    debug('DOMContentLoaded event fired');
+    console.log('[ILCS Content] DOM Content Loaded');
+});
+
+// Also try to initialize on load
+window.addEventListener('load', () => {
+    debug('Window load event fired');
+    console.log('[ILCS Content] Window loaded');
+});
 
 // Handle SPA navigation
 let currentUrl = window.location.href;
