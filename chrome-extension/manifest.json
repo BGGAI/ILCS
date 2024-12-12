@@ -6,10 +6,12 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "webNavigation"
   ],
   "host_permissions": [
-    "*://*.pinduoduo.com/*"
+    "*://*.pinduoduo.com/*",
+    "*://*.yangkeduo.com/*"
   ],
   "action": {
     "default_popup": "src/popup/popup.html"
@@ -20,8 +22,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.pinduoduo.com/*"],
-      "js": ["src/content/content.js"]
+      "matches": [
+        "*://*.pinduoduo.com/*",
+        "*://*.yangkeduo.com/*"
+      ],
+      "js": ["src/content/content.js"],
+      "run_at": "document_idle"
     }
   ],
   "background": {
