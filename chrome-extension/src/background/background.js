@@ -1,8 +1,14 @@
 const DIFY_API_ENDPOINT = 'https://api.dify.ai/v1';
 let DIFY_API_KEY = '';
 
+// Debug logging with timestamp
+function debug(...args) {
+  const timestamp = new Date().toISOString();
+  console.log(`[ILCS Background ${timestamp}]`, ...args);
+}
+
 // Log background script initialization
-console.log('[ILCS Background] Background script initialized');
+debug('Background script initialized');
 
 // URL patterns to match
 const URL_PATTERNS = [
@@ -14,17 +20,34 @@ const URL_PATTERNS = [
 chrome.storage.local.get(['difyApiKey'], (result) => {
   if (result.difyApiKey) {
     DIFY_API_KEY = result.difyApiKey;
-    console.log('[ILCS Background] Dify API key loaded from storage');
+    debug('Dify API key loaded from storage');
   } else {
-    console.log('[ILCS Background] No Dify API key found in storage');
+    debug('No Dify API key found in storage');
   }
+});
+
+// Handle content script connections
+chrome.runtime.onConnect.addListener((port) => {
+  debug('New connection from content script:', port.name);
+
+  port.onMessage.addListener((msg) => {
+    debug('Received port message:', msg);
+
+    if (msg.type === 'ELEMENTS_UPDATE') {
+      debug('Chat interface elements:', msg.elements);
+    }
+  });
+
+  port.onDisconnect.addListener(() => {
+    debug('Content script disconnected');
+  });
 });
 
 // Inject content script function
 async function injectContentScript(tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
-    console.log('[ILCS Background] Tab info:', {
+    debug('Tab info:', {
       id: tab.id,
       url: tab.url,
       status: tab.status
@@ -37,12 +60,6 @@ async function injectContentScript(tabId) {
         console.log('[ILCS Content] Direct injection started');
         console.log('[ILCS Content] Document readyState:', document.readyState);
         console.log('[ILCS Content] URL:', window.location.href);
-        console.log('[ILCS Content] Is iframe:', window.self !== window.top);
-        console.log('[ILCS Content] Available elements:', {
-          chatContainer: !!document.querySelector('.chat-container, .message-container, [class*="chat"], [class*="message"]'),
-          textarea: !!document.querySelector('textarea, [contenteditable="true"]'),
-          sendButton: !!document.querySelector('button, [class*="send"], [role="button"]')
-        });
       }
     });
 
@@ -52,7 +69,7 @@ async function injectContentScript(tabId) {
       files: ['src/content/content.js']
     });
 
-    console.log('[ILCS Background] Content script injection successful for tab:', tabId);
+    debug('Content script injection successful for tab:', tabId);
   } catch (err) {
     console.error('[ILCS Background] Script injection error:', err.message, err.stack);
   }
@@ -60,7 +77,7 @@ async function injectContentScript(tabId) {
 
 // Handle tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log('[ILCS Background] Tab updated event:', {
+  debug('Tab updated event:', {
     tabId,
     status: changeInfo.status,
     url: tab.url,
@@ -72,17 +89,27 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const matches = URL_PATTERNS.some(pattern => {
       const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
       const doesMatch = regex.test(tab.url);
-      console.log('[ILCS Background] Testing pattern:', pattern, 'against URL:', tab.url, 'Result:', doesMatch);
+      debug('Testing pattern:', pattern, 'against URL:', tab.url, 'Result:', doesMatch);
       return doesMatch;
     });
 
     if (matches) {
-      console.log('[ILCS Background] URL matches pattern, injecting content script');
+      debug('URL matches pattern, injecting content script');
       injectContentScript(tabId);
     } else {
-      console.log('[ILCS Background] URL does not match patterns, skipping injection');
+      debug('URL does not match patterns, skipping injection');
     }
   }
+});
+
+// Handle debug logs from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'DEBUG_LOG') {
+    debug('Content Script Log:', ...message.args);
+  } else if (message.type === 'CONTENT_SCRIPT_LOADED') {
+    debug('Content script loaded in tab:', sender.tab?.id);
+  }
+  return true;
 });
 
 // Handle Dify API calls
@@ -111,7 +138,7 @@ async function callDifyAPI(question, endpoint = '/completion') {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error calling Dify API:', error);
+    debug('Error calling Dify API:', error);
     throw error;
   }
 }
@@ -125,36 +152,6 @@ async function updateDifyKnowledge(originalResponse, improvedResponse, question)
       question: question
     }, '/feedback');
   } catch (error) {
-    console.error('Error updating Dify knowledge:', error);
+    debug('Error updating Dify knowledge:', error);
   }
 }
-
-// Message handling
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('[ILCS Background] Received message:', message.type);
-
-  if (message.type === 'getDifyResponse') {
-    callDifyAPI(message.question)
-      .then(response => {
-        chrome.runtime.sendMessage({
-          type: 'difyResponse',
-          response: response.answer,
-          question: message.question
-        });
-      })
-      .catch(error => {
-        console.error('Error getting Dify response:', error);
-        chrome.runtime.sendMessage({
-          type: 'difyError',
-          error: error.message
-        });
-      });
-  } else if (message.type === 'updateDifyKnowledge') {
-    updateDifyKnowledge(
-      message.originalResponse,
-      message.improvedResponse,
-      message.question
-    );
-  }
-  return true;
-});
