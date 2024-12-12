@@ -10,10 +10,17 @@ const CONFIG = {
     }
 };
 
-// Debug logging
+// Debug logging with timestamp
 function debug(...args) {
     if (CONFIG.DEBUG) {
-        console.log('[ILCS Content]', ...args);
+        const timestamp = new Date().toISOString();
+        console.log(`[ILCS Content ${timestamp}]`, ...args);
+        // Force log to background script
+        chrome.runtime.sendMessage({
+            type: 'DEBUG_LOG',
+            timestamp,
+            args: args.map(arg => String(arg))
+        }).catch(err => console.error('[ILCS Content] Failed to send debug log:', err));
     }
 }
 
@@ -24,10 +31,18 @@ function initializeContentScript() {
     debug('URL:', window.location.href);
     debug('Is iframe:', window.self !== window.top);
 
+    // Connect to background script
+    const port = chrome.runtime.connect({ name: 'content-script' });
+    port.onDisconnect.addListener(() => {
+        debug('Disconnected from background script');
+    });
+    port.postMessage({ type: 'INIT', url: window.location.href });
+
     // Set up mutation observer for dynamic content
     const observer = new MutationObserver((mutations) => {
         debug('DOM mutation detected:', mutations.length, 'changes');
-        checkForChatInterface();
+        const elements = checkForChatInterface();
+        port.postMessage({ type: 'ELEMENTS_UPDATE', elements });
     });
 
     // Start observing
@@ -35,16 +50,17 @@ function initializeContentScript() {
     debug('Mutation observer started');
 
     // Initial check
-    checkForChatInterface();
+    const elements = checkForChatInterface();
+    port.postMessage({ type: 'ELEMENTS_UPDATE', elements });
 }
 
 // Check for chat interface elements
 function checkForChatInterface() {
     debug('Checking for chat interface elements');
     const elements = {
-        chatContainer: document.querySelector('.chat-container, .message-container, [class*="chat"], [class*="message"]'),
-        textarea: document.querySelector('textarea, [contenteditable="true"]'),
-        sendButton: document.querySelector('button, [class*="send"], [role="button"]')
+        chatContainer: document.querySelector('.chat-container, .message-container, [class*="chat"], [class*="message"]')?.outerHTML,
+        textarea: document.querySelector('textarea, [contenteditable="true"]')?.outerHTML,
+        sendButton: document.querySelector('button, [class*="send"], [role="button"]')?.outerHTML
     };
 
     debug('Found elements:', elements);
@@ -64,3 +80,6 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
     debug('Initializing immediately - document already loaded');
     initializeContentScript();
 }
+
+// Alert background script that content script is loaded
+chrome.runtime.sendMessage({ type: 'CONTENT_SCRIPT_LOADED' });
