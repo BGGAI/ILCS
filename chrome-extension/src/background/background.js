@@ -23,7 +23,12 @@ chrome.storage.local.get(['difyApiKey'], (result) => {
 // Inject content script function
 async function injectContentScript(tabId) {
   try {
-    console.log('[ILCS Background] Attempting to inject content script into tab:', tabId);
+    const tab = await chrome.tabs.get(tabId);
+    console.log('[ILCS Background] Tab info:', {
+      id: tab.id,
+      url: tab.url,
+      status: tab.status
+    });
 
     // First try to inject the script directly
     await chrome.scripting.executeScript({
@@ -33,6 +38,11 @@ async function injectContentScript(tabId) {
         console.log('[ILCS Content] Document readyState:', document.readyState);
         console.log('[ILCS Content] URL:', window.location.href);
         console.log('[ILCS Content] Is iframe:', window.self !== window.top);
+        console.log('[ILCS Content] Available elements:', {
+          chatContainer: !!document.querySelector('.chat-container, .message-container, [class*="chat"], [class*="message"]'),
+          textarea: !!document.querySelector('textarea, [contenteditable="true"]'),
+          sendButton: !!document.querySelector('button, [class*="send"], [role="button"]')
+        });
       }
     });
 
@@ -44,7 +54,7 @@ async function injectContentScript(tabId) {
 
     console.log('[ILCS Background] Content script injection successful for tab:', tabId);
   } catch (err) {
-    console.error('[ILCS Background] Script injection error:', err);
+    console.error('[ILCS Background] Script injection error:', err.message, err.stack);
   }
 }
 
