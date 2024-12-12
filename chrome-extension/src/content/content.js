@@ -6,6 +6,7 @@ const CONFIG = {
     MUTATION_CONFIG: {
         childList: true,
         subtree: true,
+        attributes: true,
         characterData: true
     }
 };
@@ -21,6 +22,22 @@ function debug(...args) {
 // Immediately log that content script is loaded
 console.log('[ILCS] Content script loaded at:', window.location.href);
 debug('Content script initialized');
+
+// Handle SPA navigation
+let currentUrl = window.location.href;
+const urlObserver = new MutationObserver(() => {
+    if (currentUrl !== window.location.href) {
+        currentUrl = window.location.href;
+        debug('URL changed, reinitializing...');
+        initializeMessageMonitoring();
+    }
+});
+
+// Start observing URL changes
+urlObserver.observe(document, {
+    childList: true,
+    subtree: true
+});
 
 // Wait for chat interface to load
 function waitForChatInterface() {
