@@ -14,6 +14,13 @@
     "*://*.pinduoduo.com/*",
     "*://*.yangkeduo.com/*"
   ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.pinduoduo.com/*", "*://*.yangkeduo.com/*"],
+      "js": ["src/content/content.js"],
+      "run_at": "document_start"
+    }
+  ],
   "web_accessible_resources": [{
     "resources": ["src/content/content.js"],
     "matches": ["*://*.pinduoduo.com/*", "*://*.yangkeduo.com/*"]
