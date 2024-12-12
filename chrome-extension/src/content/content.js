@@ -10,15 +10,17 @@ const CONFIG = {
     }
 };
 
-// Debug logging function
+// Debug logging function with timestamp
 function debug(...args) {
     if (CONFIG.DEBUG) {
-        console.log('[ILCS Debug]', ...args);
+        const timestamp = new Date().toISOString();
+        console.log(`[ILCS Debug ${timestamp}]`, ...args);
     }
 }
 
 // Immediately log that content script is loaded
-debug('Content script loaded and executing');
+console.log('[ILCS] Content script loaded at:', window.location.href);
+debug('Content script initialized');
 
 // Wait for chat interface to load
 function waitForChatInterface() {
