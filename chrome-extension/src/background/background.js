@@ -18,10 +18,24 @@ chrome.storage.local.get(['difyApiKey'], (result) => {
 async function injectContentScript(tabId) {
   try {
     console.log('[ILCS Background] Attempting to inject content script into tab:', tabId);
+
+    // First try to inject the script directly
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId, allFrames: true },
+      func: () => {
+        console.log('[ILCS Content] Direct injection started');
+        console.log('[ILCS Content] Document readyState:', document.readyState);
+        console.log('[ILCS Content] URL:', window.location.href);
+        console.log('[ILCS Content] Is iframe:', window.self !== window.top);
+      }
+    });
+
+    // Then inject the actual content script file
     await chrome.scripting.executeScript({
       target: { tabId: tabId, allFrames: true },
       files: ['src/content/content.js']
     });
+
     console.log('[ILCS Background] Content script injection successful for tab:', tabId);
   } catch (err) {
     console.error('[ILCS Background] Script injection error:', err);
