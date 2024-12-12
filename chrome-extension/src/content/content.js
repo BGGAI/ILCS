@@ -21,21 +21,41 @@ function debug(...args) {
     if (CONFIG.DEBUG) {
         const timestamp = new Date().toISOString();
         console.log(`[ILCS Content ${timestamp}]`, ...args);
-        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item, .message-content').length);
+        console.log('[ILCS Content] Chat elements found:', document.querySelectorAll('.chat-message, .message-item, .message-content, .chat-container').length);
     }
 }
 
-// Initialize script
-document.addEventListener('DOMContentLoaded', () => {
-    debug('DOMContentLoaded event fired');
-    console.log('[ILCS Content] DOM Content Loaded');
-});
+// Initialize script with retry mechanism
+function initializeScript() {
+    debug('Attempting script initialization');
 
-// Also try to initialize on load
-window.addEventListener('load', () => {
-    debug('Window load event fired');
-    console.log('[ILCS Content] Window loaded');
-});
+    // Check if we're on a relevant page
+    if (!window.location.href.includes('pinduoduo.com') && !window.location.href.includes('yangkeduo.com')) {
+        debug('Not on a relevant page, skipping initialization');
+        return;
+    }
+
+    // Create and configure MutationObserver for chat interface
+    const observer = new MutationObserver((mutations) => {
+        const chatElements = document.querySelectorAll('.chat-message, .message-item, .message-content, .chat-container');
+        if (chatElements.length > 0) {
+            debug(`Found ${chatElements.length} chat elements`);
+            observer.disconnect();
+            initializeChatMonitoring();
+        }
+    });
+
+    // Start observing
+    observer.observe(document.body, CONFIG.MUTATION_CONFIG);
+    debug('MutationObserver started');
+}
+
+// Initialize as early as possible
+initializeScript();
+
+// Also try on various document states
+document.addEventListener('DOMContentLoaded', initializeScript);
+window.addEventListener('load', initializeScript);
 
 // Handle SPA navigation
 let currentUrl = window.location.href;
