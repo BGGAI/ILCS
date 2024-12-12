@@ -12,18 +12,28 @@
   ],
   "host_permissions": [
     "*://*.pinduoduo.com/*",
-    "*://*.yangkeduo.com/*"
+    "*://*.yangkeduo.com/*",
+    "*://mms.pinduoduo.com/*"
   ],
   "content_scripts": [
     {
-      "matches": ["*://*.pinduoduo.com/*", "*://*.yangkeduo.com/*"],
+      "matches": [
+        "*://*.pinduoduo.com/*",
+        "*://*.yangkeduo.com/*",
+        "*://mms.pinduoduo.com/*"
+      ],
       "js": ["src/content/content.js"],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "web_accessible_resources": [{
     "resources": ["src/content/content.js"],
-    "matches": ["*://*.pinduoduo.com/*", "*://*.yangkeduo.com/*"]
+    "matches": [
+      "*://*.pinduoduo.com/*",
+      "*://*.yangkeduo.com/*",
+      "*://mms.pinduoduo.com/*"
+    ]
   }],
   "action": {
     "default_popup": "src/popup/popup.html",
@@ -38,6 +48,7 @@
     "open_in_tab": true
   },
   "background": {
-    "service_worker": "src/background/background.js"
+    "service_worker": "src/background/background.js",
+    "type": "module"
   }
 }
