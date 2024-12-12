@@ -1,6 +1,9 @@
 const DIFY_API_ENDPOINT = 'https://api.dify.ai/v1';
 let DIFY_API_KEY = '';
 
+// Log background script initialization
+console.log('[ILCS Background] Background script initialized');
+
 // URL patterns to match
 const URL_PATTERNS = [
   "*://*.pinduoduo.com/*",
@@ -11,6 +14,9 @@ const URL_PATTERNS = [
 chrome.storage.local.get(['difyApiKey'], (result) => {
   if (result.difyApiKey) {
     DIFY_API_KEY = result.difyApiKey;
+    console.log('[ILCS Background] Dify API key loaded from storage');
+  } else {
+    console.log('[ILCS Background] No Dify API key found in storage');
   }
 });
 
@@ -44,16 +50,27 @@ async function injectContentScript(tabId) {
 
 // Handle tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  console.log('[ILCS Background] Tab updated:', tabId, changeInfo.status, tab.url);
+  console.log('[ILCS Background] Tab updated event:', {
+    tabId,
+    status: changeInfo.status,
+    url: tab.url,
+    changeInfo
+  });
 
   if (changeInfo.status === 'loading' || changeInfo.status === 'complete') {
-    const matches = URL_PATTERNS.some(pattern =>
-      new RegExp('^' + pattern.replace(/\*/g, '.*') + '$').test(tab.url)
-    );
+    // Check if URL matches our patterns
+    const matches = URL_PATTERNS.some(pattern => {
+      const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+      const doesMatch = regex.test(tab.url);
+      console.log('[ILCS Background] Testing pattern:', pattern, 'against URL:', tab.url, 'Result:', doesMatch);
+      return doesMatch;
+    });
 
     if (matches) {
       console.log('[ILCS Background] URL matches pattern, injecting content script');
       injectContentScript(tabId);
+    } else {
+      console.log('[ILCS Background] URL does not match patterns, skipping injection');
     }
   }
 });
